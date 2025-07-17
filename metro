@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Drumming Metronome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .metronome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-section h2 {
+            margin-bottom: 20px;
+            color: #ffd700;
+            font-size: 1.4em;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+        }
+
+        .control-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tempo-display {
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .beat-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .beat-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.1s ease;
+        }
+
+        .beat-dot.active {
+            background: #ffd700;
+            transform: scale(1.5);
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        .beat-dot.accent {
+            background: #ff4757;
+            transform: scale(1.5);
+            box-shadow: 0 0 20px #ff4757;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #6dd5ed);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4757, #ff6b6b);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .subdivisions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .subdivision-btn {
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .subdivision-btn.active {
+            background: #ffd700;
+            color: #1e3c72;
+            border-color: #ffd700;
+        }
+
+        .progression-mode {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .progression-mode h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .count-off {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8em;
+            font-weight: bold;
+            color: #ff4757;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .count-off.show {
+            opacity: 1;
+        }
+
+        .tempo-mapping {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .tempo-map-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .tempo-map-item input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .metronome-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-wrap: wrap;
+            }
+            
+            .tempo-display {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥁 Advanced Drumming Metronome</h1>
+        
+        <div class="metronome-grid">
+            <div class="control-section">
+                <h2>Basic Controls</h2>
+                
+                <div class="control-group">
+                    <label for="tempo">Tempo (BPM)</label>
+                    <input type="range" id="tempo" min="30" max="300" value="120">
+                </div>
+                
+                <div class="tempo-display" id="tempoDisplay">120</div>
+                
+                <div class="control-group">
+                    <label for="timeSignature">Time Signature</label>
+                    <select id="timeSignature">
+                        <option value="4/4">4/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="2/4">2/4</option>
+                        <option value="6/8">6/8</option>
+                        <option value="9/8">9/8</option>
+                        <option value="12/8">12/8</option>
+                        <option value="5/4">5/4</option>
+                        <option value="7/8">7/8</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="accentSound">Accent Sound</label>
+                    <select id="accentSound">
+                        <option value="click">Click</option>
+                        <option value="woodblock">Woodblock</option>
+                        <option value="cowbell">Cowbell</option>
+                        <option value="hihat">Hi-Hat</option>
+                        <option value="snare">Snare</option>
+                        <option value="kick">Kick</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="beatSound">Beat Sound</label>
+                    <select id="beatSound">
+                        <option value="click">Click</option>
+                        <option value="woodblock">Woodblock</option>
+                        <option value="cowbell">Cowbell</option>
+                        <option value="hihat">Hi-Hat</option>
+                        <option value="snare">Snare</option>
+                        <option value="kick">Kick</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2>Subdivisions</h2>
+                <div class="subdivisions">
+                    <div class="subdivision-btn active" data-subdivision="1">Quarter Notes</div>
+                    <div class="subdivision-btn" data-subdivision="2">8th Notes</div>
+                    <div class="subdivision-btn" data-subdivision="3">8th Triplets</div>
+                    <div class="subdivision-btn" data-subdivision="4">16th Notes</div>
+                    <div class="subdivision-btn" data-subdivision="5">16th Quintuplets</div>
+                    <div class="subdivision-btn" data-subdivision="6">16th Sextuplets</div>
+                    <div class="subdivision-btn" data-subdivision="7">32nd Septuplets</div>
+                    <div class="subdivision-btn" data-subdivision="8">32nd Notes</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="subdivisionSound">Subdivision Sound</label>
+                    <select id="subdivisionSound">
+                        <option value="tick">Tick</option>
+                        <option value="click">Click</option>
+                        <option value="woodblock">Woodblock</option>
+                        <option value="hihat">Hi-Hat</option>
+                        <option value="snare">Snare</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="volume">Volume</label>
+                    <input type="range" id="volume" min="0" max="1" step="0.1" value="0.7">
+                </div>
+            </div>
+        </div>
+        
+        <div class="beat-indicator" id="beatIndicator">
+            <!-- Beat dots will be generated here -->
+        </div>
+        
+        <div class="button-group">
+            <button class="btn btn-primary" id="playBtn">Play</button>
+            <button class="btn btn-secondary" id="pauseBtn">Pause</button>
+            <button class="btn btn-danger" id="stopBtn">Stop</button>
+        </div>
+        
+        <div class="progression-mode">
+            <h3>🚀 Progression Mode</h3>
+            <div class="control-group">
+                <label for="progressionStart">Start BPM</label>
+                <input type="number" id="progressionStart" min="30" max="300" value="60">
+            </div>
+            <div class="control-group">
+                <label for="progressionIncrement">BPM Increase Every 2 Bars</label>
+                <input type="number" id="progressionIncrement" min="1" max="50" value="10">
+            </div>
+            <div class="control-group">
+                <label for="progressionMax">Max BPM</label>
+                <input type="number" id="progressionMax" min="30" max="400" value="200">
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" id="progressionBtn">Start Progression</button>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h2>🎵 Tempo Mapping</h2>
+            <div class="tempo-mapping" id="tempoMapping">
+                <div class="tempo-map-item">
+                    <input type="number" placeholder="Bar #" min="1" class="bar-input">
+                    <input type="number" placeholder="BPM" min="30" max="400" class="bpm-input">
+                    <button class="btn btn-secondary" onclick="addTempoChange()">Add</button>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" id="tempoMappingBtn">Start Tempo Map</button>
+                <button class="btn btn-secondary" onclick="clearTempoMap()">Clear Map</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="count-off" id="countOff">4</div>
+    
+    <script>
+        class AdvancedMetronome {
+            constructor() {
+                this.audioContext = null;
+                this.isPlaying = false;
+                this.tempo = 120;
+                this.timeSignature = [4, 4];
+                this.currentBeat = 0;
+                this.subdivision = 1;
+                this.nextNoteTime = 0;
+                this.lookahead = 25;
+                this.scheduleAheadTime = 0.1;
+                this.timerID = null;
+                this.volume = 0.7;
+                this.currentBar = 1;
+                this.beatInBar = 0;
+                
+                // Progression mode
+                this.progressionMode = false;
+                this.progressionStart = 60;
+                this.progressionIncrement = 10;
+                this.progressionMax = 200;
+                this.progressionCurrentTempo = 60;
+                
+                // Tempo mapping
+                this.tempoMapping = [];
+                this.tempoMappingMode = false;
+                this.tempoMappingActive = false;
+                
+                this.initializeAudio();
+                this.setupEventListeners();
+                this.createBeatIndicator();
+                this.updateTempoDisplay();
+            }
+            
+            async initializeAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error('Audio context not supported');
+                }
+            }
+            
+            createSound(frequency, duration, type = 'sine', volume = 0.5) {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(volume * this.volume, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+            
+            createDrumSound(type, volume = 0.5) {
+                if (!this.audioContext) return;
+                
+                const sounds = {
+                    kick: () => this.createSound(60, 0.1, 'sine', volume),
+                    snare: () => this.createNoiseSound(0.1, 'highpass', 1000, volume),
+                    hihat: () => this.createNoiseSound(0.05, 'highpass', 8000, volume * 0.3),
+                    click: () => this.createSound(800, 0.05, 'square', volume),
+                    tick: () => this.createSound(1200, 0.02, 'square', volume * 0.6),
+                    woodblock: () => this.createSound(400, 0.1, 'square', volume),
+                    cowbell: () => this.createSound(550, 0.15, 'square', volume)
+                };
+                
+                if (sounds[type]) {
+                    sounds[type]();
+                }
+            }
+            
+            createNoiseSound(duration, filterType, frequency, volume) {
+                if (!this.audioContext) return;
+                
+                const bufferSize = this.audioContext.sampleRate * duration;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const whiteNoise = this.audioContext.createBufferSource();
+                whiteNoise.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = filterType;
+                filter.frequency.value = frequency;
+                
+                const gainNode = this.audioContext.createGain();
+                gainNode.gain.setValueAtTime(volume * this.volume, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                whiteNoise.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                whiteNoise.start(this.audioContext.currentTime);
+                whiteNoise.stop(this.audioContext.currentTime + duration);
+            }
+            
+            setupEventListeners() {
+                document.getElementById('playBtn').addEventListener('click', () => this.play());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                
+                document.getElementById('tempo').addEventListener('input', (e) => {
+                    this.tempo = parseInt(e.target.value);
+                    this.updateTempoDisplay();
+                });
+                
+                document.getElementById('timeSignature').addEventListener('change', (e) => {
+                    const [beats, noteValue] = e.target.value.split('/');
+                    this.timeSignature = [parseInt(beats), parseInt(noteValue)];
+                    this.createBeatIndicator();
+                });
+                
+                document.getElementById('volume').addEventListener('input', (e) => {
+                    this.volume = parseFloat(e.target.value);
+                });
+                
+                document.querySelectorAll('.subdivision-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.subdivision-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.subdivision = parseInt(btn.dataset.subdivision);
+                    });
+                });
+                
+                document.getElementById('progressionBtn').addEventListener('click', () => this.startProgression());
+                document.getElementById('tempoMappingBtn').addEventListener('click', () => this.startTempoMapping());
+            }
+            
+            createBeatIndicator() {
+                const indicator = document.getElementById('beatIndicator');
+                indicator.innerHTML = '';
+                
+                const beatsPerMeasure = this.timeSignature[0];
+                for (let i = 0; i < beatsPerMeasure * this.subdivision; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'beat-dot';
+                    indicator.appendChild(dot);
+                }
+            }
+            
+            updateTempoDisplay() {
+                document.getElementById('tempoDisplay').textContent = this.tempo;
+                document.getElementById('tempo').value = this.tempo;
+            }
+            
+            nextNote() {
+                const secondsPerBeat = 60.0 / this.tempo;
+                const subdivisionTime = secondsPerBeat / this.subdivision;
+                
+                this.nextNoteTime += subdivisionTime;
+                
+                this.currentBeat++;
+                if (this.currentBeat >= this.timeSignature[0] * this.subdivision) {
+                    this.currentBeat = 0;
+                    this.currentBar++;
+                    
+                    // Check for progression mode
+                    if (this.progressionMode && this.currentBar % 2 === 1 && this.currentBar > 1) {
+                        this.updateProgression();
+                    }
+                    
+                    // Check for tempo mapping
+                    if (this.tempoMappingActive) {
+                        this.checkTempoMapping();
+                    }
+                }
+            }
+            
+            updateProgression() {
+                if (this.progressionCurrentTempo < this.progressionMax) {
+                    this.showCountOff();
+                    this.progressionCurrentTempo += this.progressionIncrement;
+                    this.tempo = this.progressionCurrentTempo;
+                    this.updateTempoDisplay();
+                }
+            }
+            
+            checkTempoMapping() {
+                const tempoChange = this.tempoMapping.find(t => t.bar === this.currentBar);
+                if (tempoChange) {
+                    this.showCountOff();
+                    this.tempo = tempoChange.bpm;
+                    this.updateTempoDisplay();
+                }
+            }
+            
+            showCountOff() {
+                const countOff = document.getElementById('countOff');
+                let count = 4;
+                
+                const countInterval = setInterval(() => {
+                    countOff.textContent = count;
+                    countOff.classList.add('show');
+                    
+                    this.createDrumSound('click', 0.8);
+                    
+                    setTimeout(() => {
+                        countOff.classList.remove('show');
+                    }, 200);
+                    
+                    count--;
+                    if (count < 1) {
+                        clearInterval(countInterval);
+                    }
+                }, 60000 / this.tempo);
+            }
+            
+            scheduleNote(beatNumber, time) {
+                const dots = document.querySelectorAll('.beat-dot');
+                const beatsPerMeasure = this.timeSignature[0];
+                
+                // Visual indicator
+                setTimeout(() => {
+                    dots.forEach(dot => dot.classList.remove('active', 'accent'));
+                    if (dots[beatNumber]) {
+                        const isAccent = beatNumber % this.subdivision === 0;
+                        dots[beatNumber].classList.add(isAccent ? 'accent' : 'active');
+                    }
+                }, (time - this.audioContext.currentTime) * 1000);
+                
+                // Audio
+                const accentSound = document.getElementById('accentSound').value;
+                const beatSound = document.getElementById('beatSound').value;
+                const subdivisionSound = document.getElementById('subdivisionSound').value;
+                
+                if (beatNumber % this.subdivision === 0) {
+                    // Accent (downbeat)
+                    this.createDrumSound(accentSound, 0.8);
+                } else if (beatNumber % (this.subdivision / (this.subdivision > 1 ? 2 : 1)) === 0) {
+                    // Beat
+                    this.createDrumSound(beatSound, 0.6);
+                } else {
+                    // Subdivision
+                    this.createDrumSound(subdivisionSound, 0.4);
+                }
+            }
+            
+            scheduler() {
+                while (this.nextNoteTime < this.audioContext.currentTime + this.scheduleAheadTime) {
+                    this.scheduleNote(this.currentBeat, this.nextNoteTime);
+                    this.nextNote();
+                }
+                this.timerID = setTimeout(() => this.scheduler(), this.lookahead);
+            }
+            
+            async play() {
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+                
+                if (!this.isPlaying) {
+                    this.isPlaying = true;
+                    this.currentBeat = 0;
+                    this.nextNoteTime = this.audioContext.currentTime;
+                    this.scheduler();
+                }
+            }
+            
+            pause() {
+                this.isPlaying = false;
+                clearTimeout(this.timerID);
+            }
+            
+            stop() {
+                this.isPlaying = false;
+                this.progressionMode = false;
+                this.tempoMappingActive = false;
+                clearTimeout(this.timerID);
+                this.currentBeat = 0;
+                this.currentBar = 1;
+                
+                // Reset visual indicators
+                document.querySelectorAll('.beat-dot').forEach(dot => {
+                    dot.classList.remove('active', 'accent');
+                });
+                
+                // Reset progression tempo
+                this.progressionCurrentTempo = this.progressionStart;
+            }
+            
+            startProgression() {
+                this.progressionStart = parseInt(document.getElementById('progressionStart').value);
+                this.progressionIncrement = parseInt(document.getElementById('progressionIncrement').value);
+                this.progressionMax = parseInt(document.getElementById('progressionMax').value);
+                
+                this.progressionMode = true;
+                this.progressionCurrentTempo = this.progressionStart;
+                this.tempo = this.progressionStart;
+                this.updateTempoDisplay();
+                
+                this.stop();
+                this.play();
+            }
+            
+            startTempoMapping() {
+                if (this.tempoMapping.length === 0) {
+                    alert('Please add tempo changes to the map first!');
+                    return;
+                }
+                
+                this.tempoMappingActive = true;
+                this.stop();
+                this.play();
+            }
+        }
+        
+        // Initialize metronome
+        const metronome = new AdvancedMetronome();
+        
+        // Tempo mapping functions
+        function addTempoChange() {
+            const barInput = document.querySelector('.bar-input');
+            const bpmInput = document.querySelector('.bpm-input');
+            
+            const bar = parseInt(barInput.value);
+            const bpm = parseInt(bpmInput.value);
+            
+            if (bar && bpm) {
+                metronome.tempoMapping.push({ bar, bpm });
+                metronome.tempoMapping.sort((a, b) => a.bar - b.bar);
+                
+                // Add visual indicator
+                const mappingDiv = document.getElementById('tempoMapping');
+                const mapItem = document.createElement('div');
+                mapItem.className = 'tempo-map-item';
+                mapItem.innerHTML = `
+                    <span>Bar ${bar}: ${bpm} BPM</span>
+                    <button class="btn btn-danger" onclick="removeTempoChange(${bar})">Remove</button>
+                `;
+                mappingDiv.appendChild(mapItem);
+                
+                barInput.value = '';
+                bpmInput.value = '';
+            }
+        }
+        
+        function removeTempoChange(bar) {
+            metronome.tempoMapping = metronome.tempoMapping.filter(t => t.bar !== bar);
+            // Refresh the display
+            clearTempoMap();
+            metronome.tempoMapping.forEach(t => {
+                const mappingDiv = document.getElementById('tempoMapping');
+                const mapItem = document.createElement('div');
+                mapItem.className = 'tempo-map-item';
+                mapItem.innerHTML = `
+                    <span>Bar ${t.bar}: ${t.bpm} BPM</span>
+                    <button class="btn btn-danger" onclick="removeTempoChange(${t.bar})">Remove</button>
+                `;
+                mappingDiv.appendChild(mapItem);
+            });
+        }
+        
+        function clearTempoMap() {
+            metronome.tempoMapping = [];
+            const mappingDiv = document.getElementById('tempoMapping');
+            const items = mappingDiv.querySelectorAll('.tempo-map-item');
+            items.forEach((item, index) => {
+                if (index > 0) item.remove(); // Keep the first input item
+            });
+        }
+    </script>
+</body>
+</html>
